@@ -10,7 +10,9 @@ import (
 	"path/filepath"
 	"strings"
 	"time"
-    "unicode/utf8"
+	"unicode/utf8"
+
+	"golang.org/x/exp/slices"
 )
 
 // MACAddressGenerator はMACアドレスを生成する構造体
@@ -38,33 +40,57 @@ func (m *MACAddressGenerator) GenerateMACAddresses() ([]string, error) {
 
 // WriteToFile は生成されたMACアドレスを指定されたファイルに書き込む
 func (m *MACAddressGenerator) WriteToFile(macAddresses []string) error {
-	file, err := os.Create(m.Output)
-	if err != nil {
-		return err
-	}
-	defer file.Close()
 
-	switch m.Format {
+	formats := strings.Split(m.Format, ",")
+	var format string
+	if len(formats) == 1 {
+		format = formats[0]
+	}else if (len(formats)==2 && slices.Contains(formats, "json") && slices.Contains(formats, "csv")){
+		format = "json,csv"
+	}
+	switch format {
 	case "json":
-		data := map[string][]string{"macAddress": macAddresses}
-		jsonData, err := json.MarshalIndent(data, "", "  ")
-		if err != nil {
-			return err
-		}
-		_, err = file.Write(jsonData)
-		if err != nil {
-			return err
-		}
+		m.writeToJson(macAddresses)
 	case "csv":
-		writer := csv.NewWriter(file)
-		defer writer.Flush()
-        if err := writer.Write(macAddresses); err != nil {
-            return err
-        }
+		m.writeToCsv(macAddresses)
+	case "json,csv":
+		m.writeToJson(macAddresses)
+		m.writeToCsv(macAddresses)
 	default:
 		return fmt.Errorf("invalid format specified: %s", m.Format)
 	}
 
+	return nil
+}
+
+func (m *MACAddressGenerator) writeToJson(macAddresses []string) error {
+	file, err := os.Create(m.Output + ".json")
+	if err != nil {
+		return err
+	}
+	defer file.Close()
+	data := map[string][]string{"macAddress": macAddresses}
+	jsonData, err := json.MarshalIndent(data, "", "  ")
+	if err != nil {
+		return err
+	}
+	_, err = file.Write(jsonData)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (m *MACAddressGenerator) writeToCsv(macAddresses []string) error {
+	file, err := os.Create(m.Output + ".csv")
+	if err != nil {
+		return err
+	}
+	writer := csv.NewWriter(file)
+	defer writer.Flush()
+	if err := writer.Write(macAddresses); err != nil {
+			return err
+	}
 	return nil
 }
 
@@ -91,16 +117,16 @@ func generateRandomMAC(hyphen bool) string {
 func main() {
 	// フラグの定義
 	number := flag.Int("number", 10, "Number of MAC addresses to generate. Default is 10")
-	format := flag.String("format", "csv", "File format: csv, or json. Defalut is csv")
-	output := flag.String("out", "", "Output file path and name (required)")
+	format := flag.String("format", "csv", "File format: csv, json. Defalut is csv. Specify comma separated value like \"json,csv\", can multi file output")
+	output := flag.String("out", "", "Output file path and name without extension (required)")
 	hyphen := flag.Bool("hyphen", false, "Use hyphen (-) as delimiter in MAC addresses")
 	// surround := flag.Bool("surround", false, "Surround each MAC address with double quotes")
 	help := flag.Bool("help", false, "Show help information")
 
 	// ショートフラグの定義
 	flag.IntVar(number, "n", 0, "Number of MAC addresses to generate. Default is 10")
-	flag.StringVar(format, "f", "csv", "File format: csv, or json")
-	flag.StringVar(output, "o", "", "Output file path and name (required)")
+	flag.StringVar(format, "f", "csv", "File format: csv, json. Defalut is csv. Specify comma separated value like \"json,csv\", can multi file output")
+	flag.StringVar(output, "o", "", "Output file path and name without extension (required)")
 	// flag.BoolVar(surround, "s", false, "Surround each MAC address with double quotes")
 	flag.BoolVar(help, "h", false, "Show help information")
 
