@@ -21,7 +21,7 @@ Options:
         Output file path and name (required)
   -out string
         Output file path and name (required)
-  -s    Surround each MAC address with double quotes
+  -s    Surround each MAC address with single quotes
   -surround
-        Surround each MAC address with double quotes
+        Surround each MAC address with single quotes
 ```

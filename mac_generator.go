@@ -29,11 +29,12 @@ func (m *MACAddressGenerator) GenerateMACAddresses() ([]string, error) {
 	var macAddresses []string
 	for i := 0; i < m.Number; i++ {
 		mac := generateRandomMAC(m.Hyphen)
-    // if m.Surround && (m.Format == "csv") {
-    // 	macAddresses = append(macAddresses, mac)
-    // } else {
+    if m.Surround && (m.Format == "csv") {
+			mac = "'" + mac + "'"
+    	macAddresses = append(macAddresses, mac)
+    } else {
         macAddresses = append(macAddresses, mac)
-    // }
+    }
 	}
 	return macAddresses, nil
 }
@@ -120,14 +121,14 @@ func main() {
 	format := flag.String("format", "csv", "File format: csv, json. Defalut is csv. Specify comma separated value like \"json,csv\", can multi file output")
 	output := flag.String("out", "", "Output file path and name without extension (required)")
 	hyphen := flag.Bool("hyphen", false, "Use hyphen (-) as delimiter in MAC addresses")
-	// surround := flag.Bool("surround", false, "Surround each MAC address with double quotes")
+	surround := flag.Bool("surround", false, "Surround each MAC address with single quotes")
 	help := flag.Bool("help", false, "Show help information")
 
 	// ショートフラグの定義
 	flag.IntVar(number, "n", 0, "Number of MAC addresses to generate. Default is 10")
 	flag.StringVar(format, "f", "csv", "File format: csv, json. Defalut is csv. Specify comma separated value like \"json,csv\", can multi file output")
 	flag.StringVar(output, "o", "", "Output file path and name without extension (required)")
-	// flag.BoolVar(surround, "s", false, "Surround each MAC address with double quotes")
+	flag.BoolVar(surround, "s", false, "Surround each MAC address with single quotes")
 	flag.BoolVar(help, "h", false, "Show help information")
 
 	// フラグのパース
@@ -164,7 +165,7 @@ func main() {
 		Format:   strings.ToLower(*format),
 		Output:   *output,
 		Hyphen:   *hyphen,
-		// Surround: *surround,
+		Surround: *surround,
 	}
 
 	// MACアドレスの生成
