@@ -125,7 +125,7 @@ func main() {
 	help := flag.Bool("help", false, "Show help information")
 
 	// ショートフラグの定義
-	flag.IntVar(number, "n", 0, "Number of MAC addresses to generate. Default is 10")
+	flag.IntVar(number, "n", 10, "Number of MAC addresses to generate. Default is 10")
 	flag.StringVar(format, "f", "csv", "File format: csv, json. Defalut is csv. Specify comma separated value like \"json,csv\", can multi file output")
 	flag.StringVar(output, "o", "", "Output file path and name without extension (required)")
 	flag.BoolVar(surround, "s", false, "Surround each MAC address with single quotes")
@@ -142,8 +142,7 @@ func main() {
 
 	// 必須の引数が指定されているか確認
 	if *number <= 0 {
-		fmt.Fprintln(os.Stderr, "Error: Number of MAC addresses is required and must be greater than 0.")
-		os.Exit(1)
+		*number = 10
 	}
 	if *output == "" {
 		fmt.Fprintln(os.Stderr, "Error: Output file path and name are required.")
