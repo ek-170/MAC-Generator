@@ -18,7 +18,7 @@ import (
 // MACAddressGenerator はMACアドレスを生成する構造体
 type MACAddressGenerator struct {
 	Number   int
-	Format   string
+	Formats []string
 	Output   string
 	Hyphen   bool
 	Surround bool
@@ -29,24 +29,17 @@ func (m *MACAddressGenerator) GenerateMACAddresses() ([]string, error) {
 	var macAddresses []string
 	for i := 0; i < m.Number; i++ {
 		mac := generateRandomMAC(m.Hyphen)
-    if m.Surround && (m.Format == "csv") {
-			mac = "'" + mac + "'"
-    	macAddresses = append(macAddresses, mac)
-    } else {
-        macAddresses = append(macAddresses, mac)
-    }
+		macAddresses = append(macAddresses, mac)
 	}
 	return macAddresses, nil
 }
 
 // WriteToFile は生成されたMACアドレスを指定されたファイルに書き込む
 func (m *MACAddressGenerator) WriteToFile(macAddresses []string) error {
-
-	formats := strings.Split(m.Format, ",")
 	var format string
-	if len(formats) == 1 {
-		format = formats[0]
-	}else if (len(formats)==2 && slices.Contains(formats, "json") && slices.Contains(formats, "csv")){
+	if len(m.Formats) == 1 {
+		format = m.Formats[0]
+	}else if (len(m.Formats)==2 && slices.Contains(m.Formats, "json") && slices.Contains(m.Formats, "csv")){
 		format = "json,csv"
 	}
 	switch format {
@@ -58,7 +51,7 @@ func (m *MACAddressGenerator) WriteToFile(macAddresses []string) error {
 		m.writeToJson(macAddresses)
 		m.writeToCsv(macAddresses)
 	default:
-		return fmt.Errorf("invalid format specified: %s", m.Format)
+		return fmt.Errorf("invalid format specified: %s", format)
 	}
 
 	return nil
@@ -83,6 +76,11 @@ func (m *MACAddressGenerator) writeToJson(macAddresses []string) error {
 }
 
 func (m *MACAddressGenerator) writeToCsv(macAddresses []string) error {
+	if m.Surround && (slices.Contains(m.Formats, "csv")) {
+		for i, m := range macAddresses{
+			macAddresses[i] = "'" + m + "'"
+		}
+	}
 	file, err := os.Create(m.Output + ".csv")
 	if err != nil {
 		return err
@@ -158,10 +156,10 @@ func main() {
 		}
 	}
 
-	// MACアドレス生成器の初期化
+	// MACAddressGeneratorの初期化
 	macGenerator := &MACAddressGenerator{
 		Number:   *number,
-		Format:   strings.ToLower(*format),
+		Formats:  strings.Split(strings.ToLower(*format),","),
 		Output:   *output,
 		Hyphen:   *hyphen,
 		Surround: *surround,

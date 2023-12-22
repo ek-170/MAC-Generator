@@ -4,7 +4,7 @@ Generate MAC address
 ## Usage
 
 ```shell
-# sage: mac-generator [options]
+# Usage: mac-generator [options]
 # Options:
 # -format -f string  File format: csv, or json (default "csv") Specify comma separated value like \"json,csv\", can multi file output"
 # -help -h           Show help information
